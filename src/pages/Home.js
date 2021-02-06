@@ -8,17 +8,17 @@ import {
   FormControl 
 } from 'react-bootstrap'
 import { useState } from 'react'
-import { gql, useQuery, useMutation } from '@apollo/client'
+import { gql, useMutation } from '@apollo/client'
 
-const GET_USERS = gql`
-  {
-    users {
-      _id
-      name
-      email
-    }
-  }
-`
+//const GET_USERS = gql`
+  //{
+    //users {
+      //_id
+      //name
+      //email
+    //}
+  //}
+//`
 const CREATE_USER = gql`
   mutation CreateUser( $name: String!, $email: String!, $password: String! ) {
     createUser(input: {
@@ -38,6 +38,20 @@ const Container = styled.div`
   align-items: center;
   justify-content: center;
 `
+const MiniContainer = styled.div`
+  background-color: #f0efeb;
+  height: auto;
+  width: auto;
+`
+const Background = styled.body`
+  background-image: url("https://wallpaperaccess.com/full/1338378.jpg");
+  background-size: cover;
+  height: 100vh;
+  width: 100vw;
+`
+const FormAlert = styled.p`
+  color: red;
+`
 
 function Home () {
 
@@ -46,12 +60,26 @@ function Home () {
   const [password, setPassword] = useState('')
   const [passwordConfirm, setPasswordConfirm] = useState('')
   const [errors, setErrors] = useState({})
-  const [ createUser, { loading: mutationLoading, error: mutationError }, ] = useMutation(CREATE_USER) 
+  const [ 
+    createUser,
+    { 
+      loading: mutationLoading, 
+      error: mutationError 
+    } 
+  ] = useMutation(CREATE_USER, { onError: (error) => setErrors({email: error.message, emailMessage: 'Correo ya esta en uso'}) }) 
 
-  const { data, loading: queryLoading, error: queryError } = useQuery(GET_USERS) 
+  //const { data, loading: queryLoading, error: queryError } = useQuery(GET_USERS) 
 
-  if(queryLoading) return <p>loading query...</p>
-  if(queryError) return <p>somethign went wrong</p>
+  const validate = () => {
+    const isCorrectPassword = !!password && !!passwordConfirm && password === passwordConfirm
+
+    if(!isCorrectPassword) {
+      setErrors({ password: 'La contraseña no coincide' })
+      return false
+    }
+    setErrors({ password: '' })
+    return true
+  }
 
   const handleChange = (e) => {
     const { id, value } = e.target
@@ -72,36 +100,34 @@ function Home () {
     }
   }
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault()
-    try {
-      await createUser({ variables: { name, email, password }})
-    }catch(error) {
-      console.log('ups')
+    if(validate()) {
+      createUser({ variables: { name, email, password }})
     }
   }
 
   return (
-    <>
-      <Container>
-        <span>{errors.account}</span>
+    <Background>
         <Form>
           <Form.Group as={Row} controlId="name">
             <Col xs="auto">
               <Form.Label srOnly>
-                Nombre
+                name
               </Form.Label>
               <InputGroup className="mb-2">
                 <InputGroup.Prepend>
                   <InputGroup.Text>@</InputGroup.Text>
                 </InputGroup.Prepend>
-              <Form.Control
-                className="mb-2"
-                value={name}
-                placeholder="Nombre"
-                onChange={handleChange}
-              />
+                <FormControl 
+                  type="name"
+                  value={name}
+                  placeholder="Nombre"
+                  onChange={handleChange}
+                />
               </InputGroup>
+              <Form.Text>
+              </Form.Text>
             </Col>
           </Form.Group>
           <Form.Group as={Row} controlId="email">
@@ -116,10 +142,12 @@ function Home () {
                 <FormControl 
                   type="email"
                   value={email}
-                  placeholder="Email"
+                  placeholder="Correo electrónico"
                   onChange={handleChange}
                 />
               </InputGroup>
+              <Form.Text>
+              </Form.Text>
             </Col>
           </Form.Group>
           <Form.Group as={Row} controlId="password">
@@ -156,6 +184,9 @@ function Home () {
                   onChange={handleChange}
                 />
               </InputGroup>
+              <Form.Text>
+                <FormAlert>{errors.password}{errors.emailMessage}</FormAlert>
+              </Form.Text>
             </Col>
           </Form.Group>
           <Form.Group>
@@ -168,12 +199,10 @@ function Home () {
                 Submit
               </Button>
             </Col>
+            //{mutationLoading && <p>Creando nuevo usuario</p>}
           </Form.Group>
-        {mutationError && <p>Error :( try again</p>}
-        {mutationLoading && <p>Loading mutation...</p>}
-      </Form>
-    </Container>
-    </>
+            </Form>
+    </Background>
   )
 }
 
