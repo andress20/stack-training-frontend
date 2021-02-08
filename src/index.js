@@ -8,7 +8,7 @@ import { ApolloClient, InMemoryCache } from '@apollo/client'
 import { ApolloProvider } from '@apollo/react-hooks'
 
 const client = new ApolloClient({
-  uri: 'http://localhost:8000',
+  uri: process.env.REACT_APP_SERVER_URL,
   cache: new InMemoryCache(1)
 })
 
